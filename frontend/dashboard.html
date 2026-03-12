@@ -92,15 +92,46 @@
         <div class="col-lg-6">
           <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-              <h5 class="fw-bold mb-3">Track Current Order</h5>
-              <p class="mb-2">Order ID: <strong id="trackOrderId">#--</strong></p>
-              <div class="progress" role="progressbar">
-                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="trackProgress" style="width: 20%">Pending (20%)</div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">Track Current Order</h5>
+                <span class="badge text-bg-success" style="font-size:.72rem;animation:blink-live 1.4s infinite">
+                  <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle"></i>Live
+                </span>
               </div>
-              <a href="confirmation.html" class="btn btn-outline-success mt-3">View Full Status</a>
+              <p class="mb-3 text-muted" style="font-size:.85rem">Order ID: <strong id="trackOrderId">#--</strong></p>
+
+              <!-- Step tracker -->
+              <div class="d-flex align-items-center mb-3" id="trackStepRow">
+                <div class="track-step" id="tStep-pending">
+                  <div class="track-dot"><i class="bi bi-hourglass-split"></i></div>
+                  <span>Pending</span>
+                </div>
+                <div class="track-line" id="tLine-1"></div>
+                <div class="track-step" id="tStep-ready">
+                  <div class="track-dot"><i class="bi bi-bag-check"></i></div>
+                  <span>Ready</span>
+                </div>
+              </div>
+
+              <div id="trackStatusMsg" class="alert alert-warning py-2 mb-3" style="font-size:.85rem">
+                <i class="bi bi-hourglass-split me-1"></i>Preparing your order...
+              </div>
+              <a href="confirmation.html" class="btn btn-outline-success btn-sm">View Details</a>
             </div>
           </div>
         </div>
+        <style>
+          .track-step { display:flex;flex-direction:column;align-items:center;font-size:.78rem;font-weight:600;color:#9ca3af; }
+          .track-step.active .track-dot { background:#fef9c3;border-color:#d97706;color:#d97706;animation:pulse-track 1.4s infinite; }
+          .track-step.done .track-dot { background:#dcfce7;border-color:#16a34a;color:#16a34a; }
+          .track-step.active { color:#d97706; }
+          .track-step.done  { color:#16a34a; }
+          .track-dot { width:34px;height:34px;border-radius:50%;background:#e5e7eb;border:3px solid #e5e7eb;display:flex;align-items:center;justify-content:center;margin-bottom:4px;font-size:1rem;transition:all .3s; }
+          .track-line { flex:1;height:3px;background:#e5e7eb;align-self:center;margin-bottom:20px;transition:background .3s; }
+          .track-line.done { background:#16a34a; }
+          @keyframes pulse-track { 0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,.4)} 50%{box-shadow:0 0 0 7px rgba(217,119,6,0)} }
+          @keyframes blink-live  { 0%,100%{opacity:1} 50%{opacity:.3} }
+        </style>
       </section>
     </div>
   </main>

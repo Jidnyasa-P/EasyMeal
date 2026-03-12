@@ -213,37 +213,68 @@ $(function () {
       });
     }
 
-    // Load recent orders for student
+    // Load recent orders for student (also updates top stat box + track section)
     async function loadRecentOrders() {
       const user = getCurrentUser();
-      if (!user) return;
-
+      if (!user) {
+        $('#latestOrderBadge').text('Login to view');
+        return;
+      }
       try {
         const res = await fetch(API.ordersByStudent(user.email));
         const data = await res.json();
 
-        if (!data.success || data.data.length === 0) return;
+        if (!data.success || data.data.length === 0) {
+          $('#latestOrderBadge').text('No orders yet');
+          $('#recentOrdersList').html('<li class="list-group-item text-muted">No orders placed yet.</li>');
+          return;
+        }
 
-        const orders = data.data.slice(0, 3);
-        const statusColors = { pending: 'warning', preparing: 'warning', ready: 'info', completed: 'success' };
+        const orders = data.data;
+        const statusColors = { pending: 'warning', ready: 'success' };
+        const statusLabels = { pending: 'Pending', ready: 'Ready for Pickup' };
 
-        const html = orders.map(o => `
-          <li class="list-group-item d-flex justify-content-between">
-            Order #${o.order_code}
-            <span class="badge text-bg-${statusColors[o.status] || 'secondary'}">${o.status}</span>
-          </li>
-        `).join('');
+        // Top stat box: latest order status
+        const latest = orders[0];
+        const latestLabel = statusLabels[latest.status] || latest.status;
+        const latestColor = statusColors[latest.status] || 'secondary';
+        $('#latestOrderBadge').html(
+          '#' + latest.order_code + ' &nbsp;<span class="badge text-bg-' + latestColor + '">' + latestLabel + '</span>'
+        );
 
+        // Recent orders list (bottom section, up to 5)
+        const html = orders.slice(0, 5).map(o =>
+          '<li class="list-group-item d-flex justify-content-between align-items-center py-2">' +
+            '<div>' +
+              '<strong>#' + o.order_code + '</strong>' +
+              '<div class="text-muted" style="font-size:.8rem">' + (o.items_summary || '') + '</div>' +
+            '</div>' +
+            '<span class="badge text-bg-' + (statusColors[o.status] || 'secondary') + '">' + (statusLabels[o.status] || o.status) + '</span>' +
+          '</li>'
+        ).join('');
         $('#recentOrdersList').html(html);
 
-        // Update track order
-        const latest = orders[0];
-        const progressMap = { pending: 20, preparing: 50, ready: 75, completed: 100 };
-        const progress = progressMap[latest.status] || 35;
-        $('#trackOrderId').text(`#${latest.order_code}`);
-        $('#trackProgress').css('width', progress + '%').text(`${latest.status} (${progress}%)`);
+        // Update visual step tracker on dashboard
+        $('#trackOrderId').text('#' + latest.order_code);
+        if (latest.status === 'ready') {
+          $('#tStep-pending').addClass('done').removeClass('active');
+          $('#tStep-ready').addClass('done active');
+          $('#tLine-1').addClass('done');
+          $('#trackStatusMsg')
+            .removeClass('alert-warning').addClass('alert-success')
+            .html('<i class="bi bi-bag-check-fill me-1"></i><strong>Ready for pickup!</strong> Please collect from the counter.');
+        } else {
+          $('#tStep-pending').addClass('active').removeClass('done');
+          $('#tStep-ready').removeClass('active done');
+          $('#tLine-1').removeClass('done');
+          $('#trackStatusMsg')
+            .removeClass('alert-success').addClass('alert-warning')
+            .html('<i class="bi bi-hourglass-split me-1"></i>Preparing your order...');
+        }
+
       } catch (err) {
         console.log('Could not load recent orders:', err.message);
+        $('#latestOrderBadge').text('Unavailable');
       }
     }
 
@@ -265,6 +296,15 @@ $(function () {
     loadMenu();
     loadRecentOrders();
     updateCartCount();
+
+    // Real-time: refresh student orders every 5 seconds for instant status changes
+    setInterval(loadRecentOrders, 5000);
+
+    // Menu auto-refresh every 10 minutes (600000 ms)
+    setInterval(function() {
+      const cat = $('#categoryFilter').val() || 'all';
+      loadMenu(cat);
+    }, 600000);
   }
 
   // ========================
@@ -408,35 +448,66 @@ $(function () {
   // ========================
   // CONFIRMATION (confirmation.html)
   // ========================
-  if ($('#statusProgress').length) {
+  if ($('#step-pending').length) {
+    let confirmOrderId = null;
+    let confirmPollingTimer = null;
+
     // Load order details from session
     try {
       const lastOrder = JSON.parse(sessionStorage.getItem('lastOrder') || 'null');
       if (lastOrder) {
-        $('#confirmOrderId').text(`#${lastOrder.order_code}`);
-        $('#confirmTotal').text(`₹${parseFloat(lastOrder.total_amount || 0).toFixed(0)}`);
+        confirmOrderId = lastOrder.id || null;
+        $('#confirmOrderId').text('#' + lastOrder.order_code);
+        $('#confirmTotal').text('\u20b9' + parseFloat(lastOrder.total_amount || 0).toFixed(0));
+        applyConfirmStatus(lastOrder.status || 'pending');
       }
     } catch (e) {}
 
-    // Animate status
-    const statusSteps = [
-      { text: 'Preparing', width: 35 },
-      { text: 'Ready', width: 70 },
-      { text: 'Completed', width: 100 }
-    ];
-    let stepIndex = 0;
-    setInterval(() => {
-      stepIndex = (stepIndex + 1) % statusSteps.length;
-      const step = statusSteps[stepIndex];
-      $('#statusProgress').css('width', step.width + '%').text(step.text);
-      $('.status').removeClass('active').eq(stepIndex).addClass('active');
-    }, 3000);
+    function applyConfirmStatus(status) {
+      if (status === 'ready') {
+        $('#step-pending').addClass('done').removeClass('active');
+        $('#step-ready').addClass('active done');
+        $('#line-1').addClass('done');
+        $('#statusMessage')
+          .removeClass('alert-warning').addClass('alert-success')
+          .html('<i class="bi bi-bag-check-fill me-1"></i> <strong>Your order is ready for pickup!</strong> Please collect it from the counter.');
+      } else {
+        $('#step-pending').addClass('active').removeClass('done');
+        $('#step-ready').removeClass('active done');
+        $('#line-1').removeClass('done');
+        $('#statusMessage')
+          .removeClass('alert-success').addClass('alert-warning')
+          .html('<i class="bi bi-hourglass-split me-1"></i> Your order is being prepared...');
+      }
+    }
+
+    // Real-time polling: if we have an order id, poll backend every 8 seconds
+    async function pollOrderStatus() {
+      if (!confirmOrderId) return;
+      try {
+        const res = await fetch(API.orderById(confirmOrderId));
+        const data = await res.json();
+        if (data.success && data.data) {
+          applyConfirmStatus(data.data.status);
+          if (data.data.status === 'ready') {
+            clearInterval(confirmPollingTimer);
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (confirmOrderId) {
+      confirmPollingTimer = setInterval(pollOrderStatus, 8000);
+    }
   }
 
   // ========================
   // ADMIN DASHBOARD (admin.html)
   // ========================
-  if ($('#adminOrdersTable').length) {
+  if ($('#panelOrders').length) {
+
+    let adminOrdersCache = [];
+    let autoRefreshTimer = null;
 
     // Load stats
     async function loadAdminStats() {
@@ -447,7 +518,9 @@ $(function () {
           const s = data.data;
           $('#statTotal').text(s.total_orders);
           $('#statPending').text(s.pending_orders);
-          $('#statCompleted').text(s.completed_orders);
+          // Count ready from cache or fallback to 0
+          const readyCount = adminOrdersCache.filter(o => o.status === 'ready').length;
+          $('#statReady').text(readyCount || (s.ready_orders || 0));
           $('#statRevenue').text('₹' + parseFloat(s.total_revenue).toFixed(0));
         }
       } catch (err) {
@@ -455,8 +528,8 @@ $(function () {
       }
     }
 
-    // Load menu items for admin
-    async function loadAdminMenu() {
+    // Expose for panel toggle
+    window.loadAdminMenu = async function () {
       try {
         const res = await fetch(API.menuAll);
         const data = await res.json();
@@ -464,13 +537,16 @@ $(function () {
 
         const html = data.data.map(item => `
           <tr id="menu-row-${item.id}">
-            <td>${item.name}</td>
+            <td><strong>${item.name}</strong></td>
             <td>${item.category.charAt(0).toUpperCase() + item.category.slice(1)}</td>
             <td>₹${parseFloat(item.price).toFixed(0)}</td>
             <td><span class="badge ${item.is_available ? 'text-bg-success' : 'text-bg-secondary'}">
               ${item.is_available ? 'Available' : 'Unavailable'}
             </span></td>
             <td>
+              <button class="btn btn-sm btn-outline-warning me-1 edit-menu-item" data-id="${item.id}" data-name="${item.name}" data-category="${item.category}" data-price="${item.price}" data-desc="${item.description || ''}">
+                <i class="bi bi-pencil"></i> Edit
+              </button>
               <button class="btn btn-sm btn-outline-primary me-1 toggle-item" data-id="${item.id}" data-available="${item.is_available}">
                 ${item.is_available ? 'Disable' : 'Enable'}
               </button>
@@ -484,110 +560,213 @@ $(function () {
       } catch (err) {
         console.log('Menu load error:', err.message);
       }
-    }
+    };
 
     function bindMenuActions() {
-      // Toggle availability
       $('.toggle-item').off('click').on('click', async function () {
         const id = $(this).data('id');
         const currentAvail = parseInt($(this).data('available'));
         const newAvail = currentAvail ? 0 : 1;
-
         try {
           const menuRes = await fetch(API.menuAll);
           const menuData = await menuRes.json();
           const item = menuData.data.find(i => i.id === id);
           if (!item) return;
-
           await fetch(API.menuItem(id), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...item, is_available: newAvail })
           });
-          loadAdminMenu();
-        } catch (err) {
-          alert('Failed to update item.');
-        }
+          window.loadAdminMenu();
+        } catch (err) { alert('Failed to update item.'); }
       });
 
-      // Delete menu item
       $('.delete-menu-item').off('click').on('click', async function () {
         const id = $(this).data('id');
         if (!confirm('Delete this menu item?')) return;
         try {
           await fetch(API.menuItem(id), { method: 'DELETE' });
           $(`#menu-row-${id}`).remove();
-        } catch (err) {
-          alert('Failed to delete item.');
-        }
+        } catch (err) { alert('Failed to delete item.'); }
+      });
+
+      // Edit menu item — fill modal and switch to edit mode
+      $('.edit-menu-item').off('click').on('click', function () {
+        const btn = $(this);
+        $('#editItemId').val(btn.data('id'));
+        $('#editItemName').val(btn.data('name'));
+        $('#editItemCategory').val(btn.data('category'));
+        $('#editItemPrice').val(btn.data('price'));
+        $('#editItemDesc').val(btn.data('desc'));
+        new bootstrap.Modal(document.getElementById('editMenuModal')).show();
       });
     }
 
-    // Load orders
-    async function loadAdminOrders(status = 'all') {
-      try {
-        const url = status === 'all' ? API.orders : `${API.orders}?status=${status}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.success) return;
+    // Render the two-column order board
+    function renderOrderBoard(orders) {
+      adminOrdersCache = orders;
+      const q = ($('#adminOrderSearch').val() || '').toLowerCase();
 
-        const statusColors = { pending: 'warning', preparing: 'info', ready: 'primary', completed: 'success' };
+      const pending = orders.filter(o => o.status === 'pending' &&
+        (!q || o.order_code.toLowerCase().includes(q) || o.student_name.toLowerCase().includes(q)));
+      const ready   = orders.filter(o => o.status === 'ready' &&
+        (!q || o.order_code.toLowerCase().includes(q) || o.student_name.toLowerCase().includes(q)));
 
-        const html = data.data.map(order => `
-          <tr data-status="${order.status}" data-id="${order.id}">
-            <td>#${order.order_code}</td>
-            <td>${order.student_name}</td>
-            <td>${order.items_summary || '-'}</td>
-            <td><span class="badge text-bg-${statusColors[order.status] || 'secondary'}">${order.status}</span></td>
-            <td>
-              <select class="form-select form-select-sm order-status-select" data-id="${order.id}" style="min-width:120px">
-                <option value="pending" ${order.status==='pending'?'selected':''}>Pending</option>
-                <option value="preparing" ${order.status==='preparing'?'selected':''}>Preparing</option>
-                <option value="ready" ${order.status==='ready'?'selected':''}>Ready</option>
-                <option value="completed" ${order.status==='completed'?'selected':''}>Completed</option>
-              </select>
-            </td>
-          </tr>
-        `).join('');
+      $('#pendingCount').text(pending.length);
+      $('#readyCount').text(ready.length);
 
-        $('#adminOrdersTable tbody').html(html || '<tr><td colspan="5" class="text-center text-muted">No orders found.</td></tr>');
-        bindOrderActions();
-      } catch (err) {
-        console.log('Orders load error:', err.message);
+      // Pending cards
+      if (pending.length === 0) {
+        $('#pendingOrders').html('<div class="no-orders-msg"><i class="bi bi-check2-all d-block fs-2 mb-1"></i>No pending orders</div>');
+      } else {
+        $('#pendingOrders').html(pending.map(o => `
+          <div class="order-item" id="order-card-${o.id}">
+            <div class="order-info">
+              <strong>#${o.order_code}</strong>
+              <div class="order-meta"><i class="bi bi-person me-1"></i>${o.student_name}</div>
+              <div class="order-meta"><i class="bi bi-basket me-1"></i>${o.items_summary || '-'}</div>
+            </div>
+            <button class="btn btn-success mark-ready-btn" data-id="${o.id}">
+              <i class="bi bi-check-lg me-1"></i>Mark Ready
+            </button>
+          </div>
+        `).join(''));
       }
+
+      // Ready cards
+      if (ready.length === 0) {
+        $('#readyOrders').html('<div class="no-orders-msg"><i class="bi bi-box-seam d-block fs-2 mb-1"></i>No ready orders</div>');
+      } else {
+        $('#readyOrders').html(ready.map(o => `
+          <div class="order-item" id="order-card-${o.id}">
+            <div class="order-info">
+              <strong>#${o.order_code}</strong>
+              <div class="order-meta"><i class="bi bi-person me-1"></i>${o.student_name}</div>
+              <div class="order-meta"><i class="bi bi-basket me-1"></i>${o.items_summary || '-'}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary mark-done-btn" data-id="${o.id}">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Undo
+            </button>
+          </div>
+        `).join(''));
+      }
+
+      // Update stat card
+      $('#statReady').text(ready.length);
+      $('#statPending').text(pending.length);
+
+      // Update refresh time
+      const now = new Date();
+      $('#lastRefreshedTime').text('Updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+
+      bindOrderCardActions();
     }
 
-    function bindOrderActions() {
-      $('.order-status-select').off('change').on('change', async function () {
+    function bindOrderCardActions() {
+      // Mark as Ready
+      $('.mark-ready-btn').off('click').on('click', async function () {
         const id = $(this).data('id');
-        const status = $(this).val();
+        const btn = $(this);
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
         try {
           const res = await fetch(API.updateOrderStatus(id), {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
+            body: JSON.stringify({ status: 'ready' })
           });
           const data = await res.json();
           if (data.success) {
-            loadAdminOrders($('#adminOrderFilter').val() || 'all');
+            loadAdminOrders();
             loadAdminStats();
+          } else {
+            btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i>Mark Ready');
           }
         } catch (err) {
+          btn.prop('disabled', false).html('<i class="bi bi-check-lg me-1"></i>Mark Ready');
+          alert('Failed to update status.');
+        }
+      });
+
+      // Undo (back to pending)
+      $('.mark-done-btn').off('click').on('click', async function () {
+        const id = $(this).data('id');
+        const btn = $(this);
+        btn.prop('disabled', true);
+        try {
+          const res = await fetch(API.updateOrderStatus(id), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'pending' })
+          });
+          const data = await res.json();
+          if (data.success) {
+            loadAdminOrders();
+            loadAdminStats();
+          } else {
+            btn.prop('disabled', false);
+          }
+        } catch (err) {
+          btn.prop('disabled', false);
           alert('Failed to update status.');
         }
       });
     }
 
-    // Admin order search/filter
+    async function loadAdminOrders() {
+      try {
+        const res = await fetch(API.orders);
+        const data = await res.json();
+        if (!data.success) return;
+        renderOrderBoard(data.data);
+      } catch (err) {
+        console.log('Orders load error:', err.message);
+      }
+    }
+
+    // Live search filter on cached data
     $('#adminOrderSearch').on('input', function () {
-      const q = $(this).val().toLowerCase();
-      $('#adminOrdersTable tbody tr').each(function () {
-        $(this).toggle($(this).text().toLowerCase().includes(q));
-      });
+      renderOrderBoard(adminOrdersCache);
     });
 
-    $('#adminOrderFilter').on('change', function () {
-      loadAdminOrders($(this).val());
+    // Manual refresh button
+    $('#refreshOrdersBtn').on('click', function () {
+      const icon = $(this).find('i');
+      icon.addClass('spin-once');
+      setTimeout(() => icon.removeClass('spin-once'), 600);
+      loadAdminOrders();
+      loadAdminStats();
+    });
+
+    // Edit menu item form — save changes
+    $('#saveEditItemBtn').on('click', async function () {
+      const id = $('#editItemId').val();
+      const name = $('#editItemName').val().trim();
+      const category = $('#editItemCategory').val();
+      const price = $('#editItemPrice').val();
+      const description = $('#editItemDesc').val().trim();
+
+      if (!name || !price) {
+        alert('Item name and price are required.');
+        return;
+      }
+
+      try {
+        const res = await fetch(API.menuItem(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, category, price: parseFloat(price), description, is_available: 1 })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          bootstrap.Modal.getInstance(document.getElementById('editMenuModal')).hide();
+          window.loadAdminMenu();
+        } else {
+          alert('Failed to update: ' + (data.message || ''));
+        }
+      } catch (err) {
+        alert('Cannot connect to server.');
+      }
     });
 
     // Add menu item form
@@ -613,7 +792,7 @@ $(function () {
         if (data.success) {
           bootstrap.Modal.getInstance(document.getElementById('menuModal')).hide();
           $('#newItemName, #newItemPrice, #newItemDesc').val('');
-          loadAdminMenu();
+          window.loadAdminMenu();
           loadAdminStats();
         } else {
           alert('Failed: ' + data.message);
@@ -623,10 +802,15 @@ $(function () {
       }
     });
 
-    // Init
+    // Auto-refresh orders every 2 seconds for near-real-time admin view
+    autoRefreshTimer = setInterval(function () {
+      loadAdminOrders();
+      loadAdminStats();
+    }, 2000);
+
+    // Init — load stats only; panels load on click
     loadAdminStats();
-    loadAdminMenu();
-    loadAdminOrders();
+    loadAdminOrders(); // pre-load orders so they're ready when panel opens
   }
 
   // ========================

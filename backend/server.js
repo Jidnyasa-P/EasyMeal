@@ -290,7 +290,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const validStatuses = ['pending', 'preparing', 'ready', 'completed'];
+  const validStatuses = ['pending', 'ready'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ success: false, message: 'Invalid status value.' });
   }
@@ -322,13 +322,12 @@ app.get('/api/admin/stats', async (req, res) => {
   try {
     const [[{ total }]] = await db.execute('SELECT COUNT(*) AS total FROM orders');
     const [[{ pending }]] = await db.execute("SELECT COUNT(*) AS pending FROM orders WHERE status = 'pending'");
-    const [[{ preparing }]] = await db.execute("SELECT COUNT(*) AS preparing FROM orders WHERE status = 'preparing'");
-    const [[{ completed }]] = await db.execute("SELECT COUNT(*) AS completed FROM orders WHERE status = 'completed'");
-    const [[{ revenue }]] = await db.execute("SELECT IFNULL(SUM(total_amount),0) AS revenue FROM orders WHERE status = 'completed'");
+    const [[{ ready }]] = await db.execute("SELECT COUNT(*) AS ready FROM orders WHERE status = 'ready'");
+    const [[{ revenue }]] = await db.execute("SELECT IFNULL(SUM(total_amount),0) AS revenue FROM orders");
 
     res.json({
       success: true,
-      data: { total_orders: total, pending_orders: pending, preparing_orders: preparing, completed_orders: completed, total_revenue: revenue }
+      data: { total_orders: total, pending_orders: pending, ready_orders: ready, total_revenue: revenue }
     });
   } catch (err) {
     console.error('Stats error:', err);
