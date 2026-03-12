@@ -10,7 +10,7 @@ $(function () {
 
   // Fade-in sections on scroll
   function revealSections() {
-    $('.fade-in-section').each(function () {
+    $('.fade-animation').each(function () {
       if ($(this).offset().top < $(window).scrollTop() + $(window).height() - 60) {
         $(this).addClass('visible');
       }
@@ -50,7 +50,7 @@ $(function () {
     const query = ($('#menuSearch').val() || '').toLowerCase();
     const category = $('#categoryFilter').val() || 'all';
 
-    $('.menu-item').each(function () {
+    $('.items').each(function () {
       const name = ($(this).data('name') || '').toLowerCase();
       const cat = $(this).data('category');
       const matchesSearch = name.includes(query);
@@ -131,8 +131,8 @@ $(function () {
   });
 
   // Payment selection cards
-  $('.payment-card').on('click', function () {
-    $('.payment-card').removeClass('selected');
+  $('.payments').on('click', function () {
+    $('.payments').removeClass('selected');
     $(this).addClass('selected');
     $('#continuePayment').prop('disabled', false);
   });
@@ -192,7 +192,7 @@ $(function () {
       stepIndex = (stepIndex + 1) % statusSteps.length;
       const step = statusSteps[stepIndex];
       $('#statusProgress').css('width', step.width + '%').text(step.text);
-      $('.status-badge').removeClass('active').eq(stepIndex).addClass('active');
+      $('.status').removeClass('active').eq(stepIndex).addClass('active');
     }, 3000);
   }
 });
