@@ -174,42 +174,82 @@ $(function () {
         return;
       }
 
-      const html = filtered.map(item => `
+      const cart = getCart();
+      const html = filtered.map(item => {
+        const inCart = cart.find(i => i.name === item.name);
+        const qty = inCart ? inCart.qty : 0;
+        return `
         <div class="col-sm-6 col-lg-4 items" data-category="${item.category}" data-name="${item.name}">
           <div class="card cards h-100">
-            ${item.image_url ? `<img src="${item.image_url}" class="card-img-top" alt="${item.name}" onerror="this.style.display='none'">` : ''}
+            ${item.image_url ? `<img src="${item.image_url}" class="card-img-top" alt="${item.name}" onerror="this.style.display='none'" style="height:160px;object-fit:cover">` : ''}
             <div class="card-body d-flex flex-column">
-              <h5 class="card-title">${item.name}</h5>
-              <p class="text-muted">${item.description || ''}</p>
+              <h5 class="card-title mb-1">${item.name}</h5>
+              <p class="text-muted small mb-2">${item.description || ''}</p>
               <div class="mt-auto d-flex justify-content-between align-items-center">
-                <span class="fw-semibold text-success">₹${parseFloat(item.price).toFixed(0)}</span>
-                <button class="btn btn-sm btn-warning add-to-cart"
-                  data-name="${item.name}" data-price="${item.price}">Add to Cart</button>
+                <span class="fw-semibold text-success fs-6">₹${parseFloat(item.price).toFixed(0)}</span>
+                <div class="qty-ctrl d-flex align-items-center gap-1" data-name="${item.name}" data-price="${item.price}">
+                  ${qty === 0 ? `
+                  <button class="btn btn-sm btn-warning add-to-cart px-3" data-name="${item.name}" data-price="${item.price}">
+                    <i class="bi bi-cart-plus"></i> Add
+                  </button>` : `
+                  <button class="btn btn-sm btn-outline-secondary qty-dec" style="width:32px;height:32px;padding:0" data-name="${item.name}">−</button>
+                  <span class="fw-bold text-dark" style="min-width:22px;text-align:center">${qty}</span>
+                  <button class="btn btn-sm btn-warning qty-inc" style="width:32px;height:32px;padding:0" data-name="${item.name}" data-price="${item.price}">+</button>`}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
       $('#menuGrid').html(html);
       bindAddToCart();
     }
 
     function bindAddToCart() {
+      // "Add" button — first time add
       $('.add-to-cart').off('click').on('click', function () {
         const name = $(this).data('name');
         const price = Number($(this).data('price'));
         const cart = getCart();
         const found = cart.find(i => i.name === name);
-
         if (found) found.qty += 1;
         else cart.push({ name, price, qty: 1 });
-
         setCart(cart);
         updateCartCount();
-
+        // Re-render to show qty controls
+        const cat = $('#categoryFilter').val() || 'all';
+        loadMenu(cat);
         const toastEl = document.getElementById('cartToast');
         if (toastEl) new bootstrap.Toast(toastEl).show();
+      });
+
+      // "+" button — increase qty
+      $('.qty-inc').off('click').on('click', function () {
+        const name = $(this).data('name');
+        const price = Number($(this).data('price'));
+        const cart = getCart();
+        const found = cart.find(i => i.name === name);
+        if (found) found.qty += 1;
+        else cart.push({ name, price, qty: 1 });
+        setCart(cart);
+        updateCartCount();
+        const cat = $('#categoryFilter').val() || 'all';
+        loadMenu(cat);
+      });
+
+      // "−" button — decrease or remove
+      $('.qty-dec').off('click').on('click', function () {
+        const name = $(this).data('name');
+        const cart = getCart();
+        const idx = cart.findIndex(i => i.name === name);
+        if (idx === -1) return;
+        cart[idx].qty -= 1;
+        if (cart[idx].qty <= 0) cart.splice(idx, 1);
+        setCart(cart);
+        updateCartCount();
+        const cat = $('#categoryFilter').val() || 'all';
+        loadMenu(cat);
       });
     }
 
@@ -807,6 +847,169 @@ $(function () {
       loadAdminOrders();
       loadAdminStats();
     }, 2000);
+
+    // ========================
+    // GUEST ORDER PANEL
+    // ========================
+    let guestCart = {}; // { itemName: { name, price, qty } }
+    let guestMenuCache = [];
+
+    window.loadGuestMenu = async function (category = 'all') {
+      try {
+        const url = category === 'all' ? API.menu : `${API.menu}?category=${category}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.success) return;
+        guestMenuCache = data.data;
+        renderGuestGrid(data.data);
+      } catch (e) {
+        $('#guestMenuGrid').html('<div class="col-12 text-center text-muted py-4">Failed to load menu.</div>');
+      }
+    };
+
+    function renderGuestGrid(items) {
+      const q = ($('#guestSearch').val() || '').toLowerCase();
+      const filtered = items.filter(i => i.name.toLowerCase().includes(q));
+      if (filtered.length === 0) {
+        $('#guestMenuGrid').html('<div class="col-12 text-center text-muted py-3">No items found.</div>');
+        return;
+      }
+      const html = filtered.map(item => {
+        const qty = guestCart[item.name] ? guestCart[item.name].qty : 0;
+        const imgHtml = item.image_url
+          ? `<img src="${item.image_url}" class="guest-item-img" alt="${item.name}" onerror="this.outerHTML='<div class=\'guest-item-img-placeholder\'><i class=\'bi bi-egg-fried\'></i></div>'">`
+          : `<div class="guest-item-img-placeholder"><i class="bi bi-egg-fried"></i></div>`;
+        return `
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="guest-item-card${qty > 0 ? ' has-qty' : ''}" data-name="${item.name}" data-price="${item.price}">
+              <div class="guest-card-img-wrap">${imgHtml}</div>
+              <div class="p-2 text-center">
+                <div class="guest-item-name">${item.name}</div>
+                <div class="guest-item-price">₹${parseFloat(item.price).toFixed(0)}</div>
+                <div class="guest-qty-row">
+                  ${qty > 0 ? `
+                  <button class="guest-qty-btn guest-qty-dec" data-name="${item.name}">−</button>
+                  <span class="guest-qty-val">${qty}</span>` : ''}
+                  <button class="guest-qty-btn guest-qty-inc" data-name="${item.name}" data-price="${item.price}">+</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      $('#guestMenuGrid').html(html);
+      bindGuestCardActions();
+    }
+
+    function bindGuestCardActions() {
+      // Click on card image area = +1
+      $('#guestMenuGrid').off('click', '.guest-card-img-wrap').on('click', '.guest-card-img-wrap', function () {
+        const card = $(this).closest('.guest-item-card');
+        guestAddQty(card.data('name'), Number(card.data('price')));
+      });
+      // + button
+      $('#guestMenuGrid').off('click', '.guest-qty-inc').on('click', '.guest-qty-inc', function (e) {
+        e.stopPropagation();
+        guestAddQty($(this).data('name'), Number($(this).data('price')));
+      });
+      // − button
+      $('#guestMenuGrid').off('click', '.guest-qty-dec').on('click', '.guest-qty-dec', function (e) {
+        e.stopPropagation();
+        const name = $(this).data('name');
+        if (!guestCart[name]) return;
+        guestCart[name].qty -= 1;
+        if (guestCart[name].qty <= 0) delete guestCart[name];
+        renderGuestGrid(guestMenuCache);
+        updateGuestSummary();
+      });
+    }
+
+    function guestAddQty(name, price) {
+      if (!guestCart[name]) guestCart[name] = { name, price, qty: 0 };
+      guestCart[name].qty += 1;
+      renderGuestGrid(guestMenuCache);
+      updateGuestSummary();
+    }
+
+    function updateGuestSummary() {
+      const items = Object.values(guestCart);
+      if (items.length === 0) {
+        $('#guestCartList').html('<li class="list-group-item text-muted text-center py-4" id="guestEmptyMsg"><i class="bi bi-cart d-block fs-2 mb-1 text-muted"></i>Click items or tap + to add</li>');
+        $('#guestTotal').text('₹0');
+        $('#placeGuestOrderBtn').prop('disabled', true);
+        return;
+      }
+      const html = items.map(i => `
+        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+          <div>
+            <strong>${i.name}</strong>
+            <div class="text-muted" style="font-size:.78rem">₹${i.price.toFixed(0)} × ${i.qty}</div>
+          </div>
+          <span class="fw-bold">₹${(i.price * i.qty).toFixed(0)}</span>
+        </li>`).join('');
+      $('#guestCartList').html(html);
+      const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+      $('#guestTotal').text('₹' + total.toFixed(0));
+      $('#placeGuestOrderBtn').prop('disabled', false);
+    }
+
+    // Place guest order — auto-marks ready immediately
+    $('#placeGuestOrderBtn').on('click', async function () {
+      const items = Object.values(guestCart);
+      if (items.length === 0) return;
+      const name = ($('#guestName').val().trim()) || 'Guest';
+      const btn = $(this);
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Placing...');
+      try {
+        // 1. Place order
+        const res = await fetch(API.orders, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_name: name,
+            student_email: 'guest@easymeal.com',
+            items: items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
+            payment_method: 'cod'
+          })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        // 2. Immediately mark as ready (guest = walk-up, deliver on spot)
+        await fetch(API.updateOrderStatus(data.data.order_id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'ready' })
+        });
+
+        // 3. Reset
+        guestCart = {};
+        $('#guestName').val('');
+        renderGuestGrid(guestMenuCache);
+        updateGuestSummary();
+        loadAdminStats();
+        btn.prop('disabled', false).html('<i class="bi bi-check2-circle me-2"></i>Place & Mark Ready');
+
+        // Success flash
+        const toast = `<div class="position-fixed top-0 start-50 translate-middle-x mt-3 z-3">
+          <div class="alert alert-success shadow fw-semibold px-4 py-2">
+            <i class="bi bi-check-circle me-2"></i>Order #${data.data.order_code} placed & ready!
+          </div></div>`;
+        const $t = $(toast).appendTo('body');
+        setTimeout(() => $t.remove(), 3000);
+
+      } catch (err) {
+        alert('Failed to place order: ' + err.message);
+        btn.prop('disabled', false).html('<i class="bi bi-check2-circle me-2"></i>Place & Mark Ready');
+      }
+    });
+
+    // Guest panel filter & search
+    $('#guestCatFilter').on('change', function () {
+      window.loadGuestMenu($(this).val());
+    });
+    $('#guestSearch').on('input', function () {
+      renderGuestGrid(guestMenuCache);
+    });
 
     // Init — load stats only; panels load on click
     loadAdminStats();

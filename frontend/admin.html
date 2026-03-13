@@ -103,6 +103,9 @@
         <button id="btnMenuMgmt" class="btn btn-outline-success panel-btn" onclick="showPanel('menu')">
           <i class="bi bi-menu-button-wide me-2"></i>Menu Management
         </button>
+        <button id="btnGuestOrder" class="btn btn-outline-primary panel-btn" onclick="showPanel('guest')">
+          <i class="bi bi-person-plus me-2"></i>Guest Order
+        </button>
       </div>
 
       <!-- ====== ORDER MANAGEMENT PANEL ====== -->
@@ -176,10 +179,100 @@
         </div>
       </section>
 
-    </div>
-  </main>
+      <!-- ====== GUEST ORDER PANEL ====== -->
+      <section id="panelGuest" class="section-panel">
+        <div class="row g-0 guest-order-layout">
 
-  <!-- Add Menu Item Modal -->
+          <!-- Left: Menu grid -->
+          <div class="col-lg-8 pe-lg-3">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+              <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>Select Items</h5>
+              <div class="d-flex gap-2">
+                <select id="guestCatFilter" class="form-select form-select-sm" style="width:auto">
+                  <option value="all">All</option>
+                  <option value="meal">Meals</option>
+                  <option value="snack">Snacks</option>
+                  <option value="drink">Drinks</option>
+                </select>
+                <input type="text" id="guestSearch" class="form-control form-control-sm" placeholder="Search..." style="width:160px">
+              </div>
+            </div>
+            <div class="row g-2" id="guestMenuGrid">
+              <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary spinner-border-sm"></div>
+                <span class="ms-2 text-muted">Loading menu...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Order summary -->
+          <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card border-0 shadow-sm position-sticky" style="top:80px">
+              <div class="card-header bg-primary text-white fw-bold">
+                <i class="bi bi-bag me-2"></i>Guest Order Summary
+              </div>
+              <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="guestCartList">
+                  <li class="list-group-item text-muted text-center py-4" id="guestEmptyMsg">
+                    <i class="bi bi-cart d-block fs-2 mb-1 text-muted"></i>
+                    Click items or tap + to add
+                  </li>
+                </ul>
+              </div>
+              <div class="card-footer bg-white">
+                <div class="d-flex justify-content-between fw-bold mb-3">
+                  <span>Total</span>
+                  <span id="guestTotal" class="text-success">₹0</span>
+                </div>
+                <div class="mb-2">
+                  <input type="text" id="guestName" class="form-control form-control-sm" placeholder="Guest name (optional)">
+                </div>
+                <button class="btn btn-primary w-100 fw-bold" id="placeGuestOrderBtn" disabled>
+                  <i class="bi bi-check2-circle me-2"></i>Place & Mark Ready
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <style>
+        /* Guest panel item cards */
+        .guest-item-card {
+          cursor: pointer;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 2px solid transparent;
+          transition: border-color .18s, transform .15s, box-shadow .18s;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,.07);
+          user-select: none;
+        }
+        .guest-item-card:hover { border-color: #0d6efd; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(13,110,253,.15); }
+        .guest-item-card.has-qty { border-color: #0d6efd; }
+        .guest-item-img {
+          width: 100%; height: 110px; object-fit: cover;
+          background: #f3f4f6;
+          display: block;
+        }
+        .guest-item-img-placeholder {
+          width: 100%; height: 110px;
+          background: linear-gradient(135deg,#e0e7ff,#c7d2fe);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 2rem; color: #6366f1;
+        }
+        .guest-item-name { font-size: .82rem; font-weight: 700; line-height: 1.3; }
+        .guest-item-price { font-size: .78rem; color: #16a34a; font-weight: 600; }
+        .guest-qty-row { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 4px 0; }
+        .guest-qty-btn { width: 26px; height: 26px; border-radius: 50%; border: none; font-size: 1rem; line-height: 1;
+          display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; }
+        .guest-qty-dec { background: #fee2e2; color: #dc2626; }
+        .guest-qty-dec:hover { background: #fca5a5; }
+        .guest-qty-inc { background: #dbeafe; color: #2563eb; }
+        .guest-qty-inc:hover { background: #93c5fd; }
+        .guest-qty-val { min-width: 20px; text-align: center; font-weight: 800; font-size: .9rem; }
+        .guest-order-layout { min-height: 400px; }
+      </style>
   <div class="modal fade" id="menuModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -273,17 +366,24 @@
     })();
 
     function showPanel(which) {
+      // Hide all
+      $('#panelOrders, #panelMenu, #panelGuest').removeClass('active');
+      // Reset all btn styles
+      $('#btnOrderMgmt').removeClass('btn-warning').addClass('btn-outline-warning');
+      $('#btnMenuMgmt').removeClass('btn-success').addClass('btn-outline-success');
+      $('#btnGuestOrder').removeClass('btn-primary').addClass('btn-outline-primary');
+
       if (which === 'orders') {
         $('#panelOrders').addClass('active');
-        $('#panelMenu').removeClass('active');
         $('#btnOrderMgmt').removeClass('btn-outline-warning').addClass('btn-warning');
-        $('#btnMenuMgmt').removeClass('btn-success').addClass('btn-outline-success');
-      } else {
+      } else if (which === 'menu') {
         $('#panelMenu').addClass('active');
-        $('#panelOrders').removeClass('active');
         $('#btnMenuMgmt').removeClass('btn-outline-success').addClass('btn-success');
-        $('#btnOrderMgmt').removeClass('btn-warning').addClass('btn-outline-warning');
         if (typeof window.loadAdminMenu === 'function') window.loadAdminMenu();
+      } else if (which === 'guest') {
+        $('#panelGuest').addClass('active');
+        $('#btnGuestOrder').removeClass('btn-outline-primary').addClass('btn-primary');
+        if (typeof window.loadGuestMenu === 'function') window.loadGuestMenu();
       }
     }
   </script>

@@ -24,7 +24,7 @@ body {
 
 .hero-block {
   min-height: 85vh;
-  background: linear-gradient(135deg, rgba(38,70,83,.85), rgba(44,110,73,.9)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=60') center/cover no-repeat;
+  background: linear-gradient(135deg, rgba(38,70,83,.85), rgba(44,110,73,.9));
 }
 .hero { 
   animation: float 4s ease-in-out infinite; 
