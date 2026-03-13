@@ -11,381 +11,354 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    .panel-btn { min-width: 180px; font-weight: 600; font-size: 1rem; border-radius: 12px; transition: all .2s; padding: .6rem 1.4rem; }
-    .status-col { border-radius: 14px; overflow: hidden; }
-    .status-col .col-header {
-      padding: .85rem 1.2rem;
-      font-weight: 700;
-      font-size: .95rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .pending-col { border: 2px solid #ffc107; background: #fffbea; }
-    .ready-col   { border: 2px solid #28a745; background: #eafaf1; }
-    .pending-col .col-header { background: #fff8d6; }
-    .ready-col   .col-header { background: #d4edda; }
-    .orders-list { padding: .75rem; min-height: 180px; }
-    .order-item {
-      background: #fff;
-      border-radius: 10px;
-      padding: .7rem 1rem;
-      margin-bottom: .6rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,.07);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: .5rem;
-      flex-wrap: wrap;
-    }
-    .order-item .order-info strong { font-size: .9rem; }
-    .order-item .order-meta { font-size: .8rem; color: #6b7280; margin-top: 2px; }
-    .mark-ready-btn, .mark-done-btn { font-size: .78rem; padding: .28rem .85rem; white-space: nowrap; border-radius: 8px; font-weight: 600; }
-    .no-orders-msg   { text-align: center; color: #9ca3af; padding: 2.5rem 0; font-size: .9rem; }
-    .section-panel   { display: none; }
-    .section-panel.active { display: block; }
-    .live-dot {
-      width: 9px; height: 9px; border-radius: 50%;
-      display: inline-block; margin-right: 6px;
-      animation: blink 1.4s infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .panel-btn{min-width:160px;font-weight:600;font-size:.92rem;border-radius:12px;transition:all .2s;padding:.55rem 1.1rem}
+    .status-col{border-radius:14px;overflow:hidden}
+    .status-col .col-header{padding:.85rem 1.2rem;font-weight:700;font-size:.95rem;display:flex;align-items:center;justify-content:space-between}
+    .pending-col{border:2px solid #ffc107;background:#fffbea}.ready-col{border:2px solid #28a745;background:#eafaf1}
+    .pending-col .col-header{background:#fff8d6}.ready-col .col-header{background:#d4edda}
+    .orders-list{padding:.75rem;min-height:180px}
+    .order-item{background:#fff;border-radius:10px;padding:.7rem 1rem;margin-bottom:.6rem;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap}
+    .order-item .order-info strong{font-size:.9rem}
+    .order-item .order-meta{font-size:.8rem;color:#6b7280;margin-top:2px}
+    .mark-ready-btn,.mark-done-btn{font-size:.78rem;padding:.28rem .85rem;white-space:nowrap;border-radius:8px;font-weight:600}
+    .no-orders-msg{text-align:center;color:#9ca3af;padding:2.5rem 0;font-size:.9rem}
+    .section-panel{display:none}.section-panel.active{display:block}
+    .live-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;animation:blink 1.4s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    /* guest */
+    .guest-item-card{cursor:pointer;border-radius:12px;overflow:hidden;border:2px solid transparent;transition:border-color .18s,transform .15s,box-shadow .18s;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.07);user-select:none}
+    .guest-item-card:hover{border-color:#0d6efd;transform:translateY(-2px);box-shadow:0 6px 18px rgba(13,110,253,.15)}
+    .guest-item-card.has-qty{border-color:#0d6efd}
+    .guest-item-img{width:100%;height:110px;object-fit:cover;background:#f3f4f6;display:block}
+    .guest-item-img-placeholder{width:100%;height:110px;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);display:flex;align-items:center;justify-content:center;font-size:2rem;color:#6366f1}
+    .guest-item-name{font-size:.82rem;font-weight:700;line-height:1.3}
+    .guest-item-price{font-size:.78rem;color:#16a34a;font-weight:600}
+    .guest-qty-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0}
+    .guest-qty-btn{width:26px;height:26px;border-radius:50%;border:none;font-size:1rem;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
+    .guest-qty-dec{background:#fee2e2;color:#dc2626}.guest-qty-dec:hover{background:#fca5a5}
+    .guest-qty-inc{background:#dbeafe;color:#2563eb}.guest-qty-inc:hover{background:#93c5fd}
+    .guest-qty-val{min-width:20px;text-align:center;font-weight:800;font-size:.9rem}
+    .guest-order-layout{min-height:400px}
+    /* history */
+    .hist-row:hover{background:#f8f9fa}
+    /* analytics */
+    .kpi-card{border-radius:14px;padding:1rem 1.2rem;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.07);height:100%}
+    .bar-track{background:#f1f5f9;border-radius:8px;overflow:hidden;height:18px}
+    .bar-fill{height:100%;border-radius:8px;transition:width .45s ease}
+    .cat-pill{display:inline-block;border-radius:20px;padding:2px 12px;font-size:.78rem;font-weight:600}
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark navigation">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-cup-hot-fill me-2"></i>EasyMeal Admin</a>
-      <span class="text-white-50 ms-auto me-3 d-none d-md-inline" style="font-size:.85rem">
-        <i class="bi bi-calendar3 me-1"></i><span id="adminTodayDate"></span>
-      </span>
-      <a href="login.html" id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</a>
-    </div>
-  </nav>
+<nav class="navbar navbar-expand-lg navbar-dark navigation">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-cup-hot-fill me-2"></i>EasyMeal Admin</a>
+    <span class="text-white-50 ms-auto me-3 d-none d-md-inline" style="font-size:.85rem">
+      <i class="bi bi-calendar3 me-1"></i><span id="adminTodayDate"></span>
+    </span>
+    <a href="login.html" id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</a>
+  </div>
+</nav>
 
-  <main class="py-4">
-    <div class="container">
-      <h2 class="fw-bold mb-4">Cafeteria Admin Dashboard</h2>
+<main class="py-4">
+<div class="container">
+  <h2 class="fw-bold mb-4">Cafeteria Admin Dashboard</h2>
 
-      <!-- Stats -->
-      <section class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="statistics bg-white p-3 rounded-4 shadow-sm">
-            <h6 class="text-muted mb-1">Total Orders</h6>
-            <h3 class="mb-0" id="statTotal"><span class="spinner-border spinner-border-sm"></span></h3>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="statistics bg-white p-3 rounded-4 shadow-sm">
-            <h6 class="text-muted mb-1">Pending</h6>
-            <h3 class="mb-0 text-warning" id="statPending">-</h3>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="statistics bg-white p-3 rounded-4 shadow-sm">
-            <h6 class="text-muted mb-1">Ready</h6>
-            <h3 class="mb-0 text-success" id="statReady">-</h3>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="statistics bg-white p-3 rounded-4 shadow-sm">
-            <h6 class="text-muted mb-1">Total Revenue</h6>
-            <h3 class="mb-0 text-primary" id="statRevenue">-</h3>
-          </div>
-        </div>
-      </section>
+  <!-- Stats -->
+  <section class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="statistics bg-white p-3 rounded-4 shadow-sm">
+      <h6 class="text-muted mb-1">Total Orders</h6>
+      <h3 class="mb-0" id="statTotal"><span class="spinner-border spinner-border-sm"></span></h3>
+    </div></div>
+    <div class="col-6 col-md-3"><div class="statistics bg-white p-3 rounded-4 shadow-sm">
+      <h6 class="text-muted mb-1">Pending</h6><h3 class="mb-0 text-warning" id="statPending">-</h3>
+    </div></div>
+    <div class="col-6 col-md-3"><div class="statistics bg-white p-3 rounded-4 shadow-sm">
+      <h6 class="text-muted mb-1">Ready</h6><h3 class="mb-0 text-success" id="statReady">-</h3>
+    </div></div>
+    <div class="col-6 col-md-3"><div class="statistics bg-white p-3 rounded-4 shadow-sm">
+      <h6 class="text-muted mb-1">Total Revenue</h6><h3 class="mb-0 text-primary" id="statRevenue">-</h3>
+    </div></div>
+  </section>
 
-      <!-- Panel Toggle Buttons -->
-      <div class="d-flex gap-3 mb-4 flex-wrap">
-        <button id="btnOrderMgmt" class="btn btn-warning panel-btn" onclick="showPanel('orders')">
-          <i class="bi bi-receipt-cutoff me-2"></i>Order Management
-        </button>
-        <button id="btnMenuMgmt" class="btn btn-outline-success panel-btn" onclick="showPanel('menu')">
-          <i class="bi bi-menu-button-wide me-2"></i>Menu Management
-        </button>
-        <button id="btnGuestOrder" class="btn btn-outline-primary panel-btn" onclick="showPanel('guest')">
-          <i class="bi bi-person-plus me-2"></i>Guest Order
-        </button>
+  <!-- Panel Buttons -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    <button id="btnOrderMgmt" class="btn btn-warning panel-btn" onclick="showPanel('orders')"><i class="bi bi-receipt-cutoff me-2"></i>Order Management</button>
+    <button id="btnMenuMgmt" class="btn btn-outline-success panel-btn" onclick="showPanel('menu')"><i class="bi bi-menu-button-wide me-2"></i>Menu Management</button>
+    <button id="btnGuestOrder" class="btn btn-outline-primary panel-btn" onclick="showPanel('guest')"><i class="bi bi-person-plus me-2"></i>Guest Order</button>
+    <button id="btnHistory" class="btn btn-outline-secondary panel-btn" onclick="showPanel('history')"><i class="bi bi-clock-history me-2"></i>Order History</button>
+    <button id="btnAnalytics" class="btn btn-outline-info panel-btn" onclick="showPanel('analytics')"><i class="bi bi-bar-chart-line me-2"></i>Analytics</button>
+  </div>
+
+  <!-- ORDER MANAGEMENT -->
+  <section id="panelOrders" class="section-panel">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <h5 class="fw-bold mb-0"><span class="live-dot bg-success"></span>Live Orders
+        <small class="text-muted fw-normal fs-6 ms-2" id="lastRefreshedTime"></small></h5>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" id="adminOrderSearch" class="form-control form-control-sm" placeholder="Search order / student" style="max-width:210px">
+        <button class="btn btn-sm btn-outline-secondary" id="refreshOrdersBtn"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="status-col pending-col">
+          <div class="col-header"><span><i class="bi bi-hourglass-split me-2 text-warning"></i>Pending</span>
+            <span class="badge text-bg-warning fs-6 px-3" id="pendingCount">0</span></div>
+          <div class="orders-list" id="pendingOrders">
+            <div class="no-orders-msg"><i class="bi bi-check2-all d-block fs-2 mb-1"></i>No pending orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="status-col ready-col">
+          <div class="col-header"><span><i class="bi bi-bag-check-fill me-2 text-success"></i>Ready for Pickup</span>
+            <span class="badge text-bg-success fs-6 px-3" id="readyCount">0</span></div>
+          <div class="orders-list" id="readyOrders">
+            <div class="no-orders-msg"><i class="bi bi-box-seam d-block fs-2 mb-1"></i>No ready orders</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <!-- ====== ORDER MANAGEMENT PANEL ====== -->
-      <section id="panelOrders" class="section-panel">
+  <!-- MENU MANAGEMENT -->
+  <section id="panelMenu" class="section-panel">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0">Menu Management</h5>
+        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#menuModal"><i class="bi bi-plus-circle me-1"></i>Add Item</button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="adminMenuTableBody">
+              <tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm text-success"></div> Loading menu...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUEST ORDER -->
+  <section id="panelGuest" class="section-panel">
+    <div class="row g-0 guest-order-layout">
+      <div class="col-lg-8 pe-lg-3">
         <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-          <h5 class="fw-bold mb-0">
-            <span class="live-dot bg-success"></span>Live Orders
-            <small class="text-muted fw-normal fs-6 ms-2" id="lastRefreshedTime"></small>
-          </h5>
-          <div class="d-flex gap-2 align-items-center flex-wrap">
-            <input type="text" id="adminOrderSearch" class="form-control form-control-sm" placeholder="Search order / student" style="max-width:210px">
-            <button class="btn btn-sm btn-outline-secondary" id="refreshOrdersBtn" title="Refresh orders">
-              <i class="bi bi-arrow-clockwise"></i>
+          <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>Select Items</h5>
+          <div class="d-flex gap-2">
+            <select id="guestCatFilter" class="form-select form-select-sm" style="width:auto">
+              <option value="all">All</option><option value="meal">Meals</option>
+              <option value="snack">Snacks</option><option value="drink">Drinks</option>
+            </select>
+            <input type="text" id="guestSearch" class="form-control form-control-sm" placeholder="Search..." style="width:160px">
+          </div>
+        </div>
+        <div class="row g-2" id="guestMenuGrid">
+          <div class="col-12 text-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div><span class="ms-2 text-muted">Loading menu...</span></div>
+        </div>
+      </div>
+      <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="card border-0 shadow-sm position-sticky" style="top:80px">
+          <div class="card-header bg-primary text-white fw-bold"><i class="bi bi-bag me-2"></i>Guest Order Summary</div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush" id="guestCartList">
+              <li class="list-group-item text-muted text-center py-4" id="guestEmptyMsg">
+                <i class="bi bi-cart d-block fs-2 mb-1 text-muted"></i>Click items or tap + to add
+              </li>
+            </ul>
+          </div>
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between fw-bold mb-3"><span>Total</span><span id="guestTotal" class="text-success">₹0</span></div>
+            <div class="mb-2"><input type="text" id="guestName" class="form-control form-control-sm" placeholder="Guest name (optional)"></div>
+            <button class="btn btn-primary w-100 fw-bold" id="placeGuestOrderBtn" disabled>
+              <i class="bi bi-check2-circle me-2"></i>Place & Mark Ready
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- Two-column status board -->
-        <div class="row g-3">
-          <!-- Pending Column -->
-          <div class="col-md-6">
-            <div class="status-col pending-col">
-              <div class="col-header">
-                <span><i class="bi bi-hourglass-split me-2 text-warning"></i>Pending</span>
-                <span class="badge text-bg-warning fs-6 px-3" id="pendingCount">0</span>
-              </div>
-              <div class="orders-list" id="pendingOrders">
-                <div class="no-orders-msg"><i class="bi bi-check2-all d-block fs-2 mb-1"></i>No pending orders</div>
-              </div>
+  <!-- ORDER HISTORY -->
+  <section id="panelHistory" class="section-panel">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row gap-3">
+          <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-secondary"></i>Order History</h5>
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="d-flex align-items-center gap-1">
+              <label class="text-muted small mb-0 text-nowrap">From</label>
+              <input type="date" id="histFrom" class="form-control form-control-sm" style="width:140px">
             </div>
-          </div>
-
-          <!-- Ready Column -->
-          <div class="col-md-6">
-            <div class="status-col ready-col">
-              <div class="col-header">
-                <span><i class="bi bi-bag-check-fill me-2 text-success"></i>Ready for Pickup</span>
-                <span class="badge text-bg-success fs-6 px-3" id="readyCount">0</span>
-              </div>
-              <div class="orders-list" id="readyOrders">
-                <div class="no-orders-msg"><i class="bi bi-box-seam d-block fs-2 mb-1"></i>No ready orders</div>
-              </div>
+            <div class="d-flex align-items-center gap-1">
+              <label class="text-muted small mb-0 text-nowrap">To</label>
+              <input type="date" id="histTo" class="form-control form-control-sm" style="width:140px">
             </div>
+            <input type="text" id="histStudent" class="form-control form-control-sm" placeholder="Student name / email" style="width:180px">
+            <button class="btn btn-sm btn-secondary" id="histFilterBtn"><i class="bi bi-funnel me-1"></i>Filter</button>
+            <button class="btn btn-sm btn-outline-secondary" id="histClearBtn">Clear</button>
           </div>
         </div>
-      </section>
+        <div class="mt-2 d-flex gap-4 flex-wrap" style="font-size:.82rem">
+          <span>Results: <strong id="histCount">—</strong></span>
+          <span>Revenue: <strong id="histRevenue" class="text-success">—</strong></span>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>Order</th><th>Student</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date &amp; Time</th></tr>
+            </thead>
+            <tbody id="histTableBody">
+              <tr><td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-range d-block fs-1 mb-2 opacity-25"></i>
+                Select a date range and click <strong>Filter</strong>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <!-- ====== MENU MANAGEMENT PANEL ====== -->
-      <section id="panelMenu" class="section-panel">
+  <!-- ANALYTICS -->
+  <section id="panelAnalytics" class="section-panel">
+    <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+      <span class="text-muted small">Period:</span>
+      <button class="btn btn-sm btn-info an-period active" data-days="7">Last 7 Days</button>
+      <button class="btn btn-sm btn-outline-info an-period" data-days="30">30 Days</button>
+      <button class="btn btn-sm btn-outline-info an-period" data-days="90">90 Days</button>
+      <button class="btn btn-sm btn-outline-secondary ms-1" id="anRefreshBtn"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3"><div class="kpi-card">
+        <div class="text-muted small mb-1"><i class="bi bi-trophy-fill text-warning me-1"></i>Most Popular</div>
+        <div class="fw-bold text-truncate" id="kpiPopular">—</div>
+        <div class="small text-success mt-1" id="kpiPopularSub"></div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="kpi-card">
+        <div class="text-muted small mb-1"><i class="bi bi-arrow-down-circle text-danger me-1"></i>Least Popular</div>
+        <div class="fw-bold text-truncate" id="kpiLeast">—</div>
+        <div class="small text-danger mt-1" id="kpiLeastSub"></div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="kpi-card">
+        <div class="text-muted small mb-1"><i class="bi bi-boxes text-primary me-1"></i>Most Sold (Units)</div>
+        <div class="fw-bold text-truncate" id="kpiSold">—</div>
+        <div class="small text-primary mt-1" id="kpiSoldSub"></div>
+      </div></div>
+      <div class="col-6 col-lg-3"><div class="kpi-card">
+        <div class="text-muted small mb-1"><i class="bi bi-currency-rupee text-success me-1"></i>Top Revenue Item</div>
+        <div class="fw-bold text-truncate" id="kpiRevItem">—</div>
+        <div class="small text-warning mt-1" id="kpiRevItemSub"></div>
+      </div></div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white fw-semibold"><i class="bi bi-bar-chart me-2 text-info"></i>Top 10 Items by Units Sold</div>
+          <div class="card-body" id="anItemBars"><div class="text-center py-4"><div class="spinner-border spinner-border-sm text-info"></div></div></div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-header bg-white fw-semibold"><i class="bi bi-pie-chart me-2 text-warning"></i>Sales by Category</div>
+          <div class="card-body" id="anCatBars"><div class="text-center py-3"><div class="spinner-border spinner-border-sm text-warning"></div></div></div>
+        </div>
         <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="mb-0">Menu Management</h5>
-            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#menuModal">
-              <i class="bi bi-plus-circle me-1"></i>Add Item
-            </button>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr><th>Item</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="adminMenuTableBody">
-                  <tr><td colspan="5" class="text-center py-3">
-                    <div class="spinner-border spinner-border-sm text-success"></div> Loading menu...
-                  </td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ====== GUEST ORDER PANEL ====== -->
-      <section id="panelGuest" class="section-panel">
-        <div class="row g-0 guest-order-layout">
-
-          <!-- Left: Menu grid -->
-          <div class="col-lg-8 pe-lg-3">
-            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-              <h5 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-primary"></i>Select Items</h5>
-              <div class="d-flex gap-2">
-                <select id="guestCatFilter" class="form-select form-select-sm" style="width:auto">
-                  <option value="all">All</option>
-                  <option value="meal">Meals</option>
-                  <option value="snack">Snacks</option>
-                  <option value="drink">Drinks</option>
-                </select>
-                <input type="text" id="guestSearch" class="form-control form-control-sm" placeholder="Search..." style="width:160px">
-              </div>
-            </div>
-            <div class="row g-2" id="guestMenuGrid">
-              <div class="col-12 text-center py-4">
-                <div class="spinner-border text-primary spinner-border-sm"></div>
-                <span class="ms-2 text-muted">Loading menu...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Order summary -->
-          <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="card border-0 shadow-sm position-sticky" style="top:80px">
-              <div class="card-header bg-primary text-white fw-bold">
-                <i class="bi bi-bag me-2"></i>Guest Order Summary
-              </div>
-              <div class="card-body p-0">
-                <ul class="list-group list-group-flush" id="guestCartList">
-                  <li class="list-group-item text-muted text-center py-4" id="guestEmptyMsg">
-                    <i class="bi bi-cart d-block fs-2 mb-1 text-muted"></i>
-                    Click items or tap + to add
-                  </li>
-                </ul>
-              </div>
-              <div class="card-footer bg-white">
-                <div class="d-flex justify-content-between fw-bold mb-3">
-                  <span>Total</span>
-                  <span id="guestTotal" class="text-success">₹0</span>
-                </div>
-                <div class="mb-2">
-                  <input type="text" id="guestName" class="form-control form-control-sm" placeholder="Guest name (optional)">
-                </div>
-                <button class="btn btn-primary w-100 fw-bold" id="placeGuestOrderBtn" disabled>
-                  <i class="bi bi-check2-circle me-2"></i>Place & Mark Ready
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <style>
-        /* Guest panel item cards */
-        .guest-item-card {
-          cursor: pointer;
-          border-radius: 12px;
-          overflow: hidden;
-          border: 2px solid transparent;
-          transition: border-color .18s, transform .15s, box-shadow .18s;
-          background: #fff;
-          box-shadow: 0 2px 8px rgba(0,0,0,.07);
-          user-select: none;
-        }
-        .guest-item-card:hover { border-color: #0d6efd; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(13,110,253,.15); }
-        .guest-item-card.has-qty { border-color: #0d6efd; }
-        .guest-item-img {
-          width: 100%; height: 110px; object-fit: cover;
-          background: #f3f4f6;
-          display: block;
-        }
-        .guest-item-img-placeholder {
-          width: 100%; height: 110px;
-          background: linear-gradient(135deg,#e0e7ff,#c7d2fe);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 2rem; color: #6366f1;
-        }
-        .guest-item-name { font-size: .82rem; font-weight: 700; line-height: 1.3; }
-        .guest-item-price { font-size: .78rem; color: #16a34a; font-weight: 600; }
-        .guest-qty-row { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 4px 0; }
-        .guest-qty-btn { width: 26px; height: 26px; border-radius: 50%; border: none; font-size: 1rem; line-height: 1;
-          display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; }
-        .guest-qty-dec { background: #fee2e2; color: #dc2626; }
-        .guest-qty-dec:hover { background: #fca5a5; }
-        .guest-qty-inc { background: #dbeafe; color: #2563eb; }
-        .guest-qty-inc:hover { background: #93c5fd; }
-        .guest-qty-val { min-width: 20px; text-align: center; font-weight: 800; font-size: .9rem; }
-        .guest-order-layout { min-height: 400px; }
-      </style>
-  <div class="modal fade" id="menuModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add New Menu Item</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Item Name <span class="text-danger">*</span></label>
-            <input class="form-control" type="text" id="newItemName" placeholder="e.g. Veg Biryani">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Category</label>
-            <select class="form-select" id="newItemCategory">
-              <option value="meal">Meal</option>
-              <option value="snack">Snack</option>
-              <option value="drink">Drink</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Price (₹) <span class="text-danger">*</span></label>
-            <input class="form-control" type="number" id="newItemPrice" placeholder="e.g. 85" min="1">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" id="newItemDesc" rows="2" placeholder="Short description of the item"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-success" id="saveMenuItemBtn">
-            <i class="bi bi-save me-1"></i>Save Item
-          </button>
+          <div class="card-header bg-white fw-semibold"><i class="bi bi-person-badge me-2 text-success"></i>Top 5 Students</div>
+          <div class="card-body p-0"><ul class="list-group list-group-flush" id="anTopStudents">
+            <li class="list-group-item text-center py-3"><div class="spinner-border spinner-border-sm"></div></li>
+          </ul></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Edit Menu Item Modal -->
-  <div class="modal fade" id="editMenuModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Menu Item</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="editItemId">
-          <div class="mb-3">
-            <label class="form-label">Item Name <span class="text-danger">*</span></label>
-            <input class="form-control" type="text" id="editItemName" placeholder="e.g. Veg Biryani">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Category</label>
-            <select class="form-select" id="editItemCategory">
-              <option value="meal">Meal</option>
-              <option value="snack">Snack</option>
-              <option value="drink">Drink</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Price (₹) <span class="text-danger">*</span></label>
-            <input class="form-control" type="number" id="editItemPrice" placeholder="e.g. 85" min="1">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" id="editItemDesc" rows="2" placeholder="Short description"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-warning" id="saveEditItemBtn">
-            <i class="bi bi-save me-1"></i>Save Changes
-          </button>
-        </div>
-      </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-calendar-week me-2 text-secondary"></i>Daily Orders – Last 14 Days</div>
+      <div class="card-body" id="anDailyBars"><div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div></div>
     </div>
-  </div>
+  </section>
 
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/script.js"></script>
-  <script>
-    // Show today's date in navbar
-    (function() {
-      const d = new Date();
-      const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-      document.getElementById('adminTodayDate').textContent = d.toLocaleDateString('en-IN', opts);
-    })();
+</div><!-- /container -->
+</main>
 
-    function showPanel(which) {
-      // Hide all
-      $('#panelOrders, #panelMenu, #panelGuest').removeClass('active');
-      // Reset all btn styles
-      $('#btnOrderMgmt').removeClass('btn-warning').addClass('btn-outline-warning');
-      $('#btnMenuMgmt').removeClass('btn-success').addClass('btn-outline-success');
-      $('#btnGuestOrder').removeClass('btn-primary').addClass('btn-outline-primary');
+<!-- Add Menu Modal -->
+<div class="modal fade" id="menuModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Add New Menu Item</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="mb-3"><label class="form-label">Item Name <span class="text-danger">*</span></label><input class="form-control" type="text" id="newItemName" placeholder="e.g. Veg Biryani"></div>
+      <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="newItemCategory"><option value="meal">Meal</option><option value="snack">Snack</option><option value="drink">Drink</option></select></div>
+      <div class="mb-3"><label class="form-label">Price (₹) <span class="text-danger">*</span></label><input class="form-control" type="number" id="newItemPrice" placeholder="e.g. 85" min="1"></div>
+      <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="newItemDesc" rows="2" placeholder="Short description of the item"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success" id="saveMenuItemBtn"><i class="bi bi-save me-1"></i>Save Item</button></div>
+  </div></div>
+</div>
 
-      if (which === 'orders') {
-        $('#panelOrders').addClass('active');
-        $('#btnOrderMgmt').removeClass('btn-outline-warning').addClass('btn-warning');
-      } else if (which === 'menu') {
-        $('#panelMenu').addClass('active');
-        $('#btnMenuMgmt').removeClass('btn-outline-success').addClass('btn-success');
-        if (typeof window.loadAdminMenu === 'function') window.loadAdminMenu();
-      } else if (which === 'guest') {
-        $('#panelGuest').addClass('active');
-        $('#btnGuestOrder').removeClass('btn-outline-primary').addClass('btn-primary');
-        if (typeof window.loadGuestMenu === 'function') window.loadGuestMenu();
+<!-- Edit Menu Modal -->
+<div class="modal fade" id="editMenuModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Menu Item</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editItemId">
+      <div class="mb-3"><label class="form-label">Item Name <span class="text-danger">*</span></label><input class="form-control" type="text" id="editItemName"></div>
+      <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="editItemCategory"><option value="meal">Meal</option><option value="snack">Snack</option><option value="drink">Drink</option></select></div>
+      <div class="mb-3"><label class="form-label">Price (₹) <span class="text-danger">*</span></label><input class="form-control" type="number" id="editItemPrice" min="1"></div>
+      <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="editItemDesc" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-warning" id="saveEditItemBtn"><i class="bi bi-save me-1"></i>Save Changes</button></div>
+  </div></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/script.js"></script>
+<script>
+  (function(){
+    var d=new Date();
+    document.getElementById('adminTodayDate').textContent=d.toLocaleDateString('en-IN',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  })();
+
+  function showPanel(which){
+    $('#panelOrders,#panelMenu,#panelGuest,#panelHistory,#panelAnalytics').removeClass('active');
+    $('#btnOrderMgmt').removeClass('btn-warning').addClass('btn-outline-warning');
+    $('#btnMenuMgmt').removeClass('btn-success').addClass('btn-outline-success');
+    $('#btnGuestOrder').removeClass('btn-primary').addClass('btn-outline-primary');
+    $('#btnHistory').removeClass('btn-secondary').addClass('btn-outline-secondary');
+    $('#btnAnalytics').removeClass('btn-info').addClass('btn-outline-info');
+
+    if(which==='orders'){
+      $('#panelOrders').addClass('active');
+      $('#btnOrderMgmt').removeClass('btn-outline-warning').addClass('btn-warning');
+    } else if(which==='menu'){
+      $('#panelMenu').addClass('active');
+      $('#btnMenuMgmt').removeClass('btn-outline-success').addClass('btn-success');
+      if(typeof window.loadAdminMenu==='function') window.loadAdminMenu();
+    } else if(which==='guest'){
+      $('#panelGuest').addClass('active');
+      $('#btnGuestOrder').removeClass('btn-outline-primary').addClass('btn-primary');
+      if(typeof window.loadGuestMenu==='function') window.loadGuestMenu();
+    } else if(which==='history'){
+      $('#panelHistory').addClass('active');
+      $('#btnHistory').removeClass('btn-outline-secondary').addClass('btn-secondary');
+      if(!$('#histFrom').val()){
+        var t=new Date().toISOString().split('T')[0];
+        $('#histFrom').val(t); $('#histTo').val(t);
+        if(typeof window.loadOrderHistory==='function') window.loadOrderHistory();
       }
+    } else if(which==='analytics'){
+      $('#panelAnalytics').addClass('active');
+      $('#btnAnalytics').removeClass('btn-outline-info').addClass('btn-info');
+      if(typeof window.loadAnalytics==='function') window.loadAnalytics(7);
     }
-  </script>
+  }
+</script>
 </body>
 </html>

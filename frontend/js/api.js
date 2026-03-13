@@ -20,6 +20,9 @@ const API = {
 
   // Admin
   adminStats: `${API_BASE}/admin/stats`,
+  orderHistory:      `${API_BASE}/orders/history`,
+  analytics:         `${API_BASE}/analytics`,
+  studentOrderItems: (email) => `${API_BASE}/orders/student/${encodeURIComponent(email)}/items`,
 };
 
 // Helper: Get current logged-in user from session

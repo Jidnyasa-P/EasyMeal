@@ -12,56 +12,101 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark navigation">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-cup-hot-fill me-2"></i>EasyMeal</a>
-      <div class="ms-auto d-flex gap-2">
-        <a class="btn btn-outline-light btn-sm" href="dashboard.html">Back to Menu</a>
-        <a class="btn btn-outline-light btn-sm" id="logoutBtn" href="login.html">Logout</a>
-      </div>
+<nav class="navbar navbar-expand-lg navbar-dark navigation">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-cup-hot-fill me-2"></i>EasyMeal</a>
+    <div class="ms-auto d-flex gap-2">
+      <a class="btn btn-outline-light btn-sm" href="dashboard.html">Back to Menu</a>
+      <a class="btn btn-outline-light btn-sm" id="logoutBtn" href="login.html">Logout</a>
     </div>
-  </nav>
+  </div>
+</nav>
 
-  <main class="py-5">
-    <div class="container">
-      <h2 class="fw-bold mb-4"><i class="bi bi-cart3 me-2"></i>Your Cart</h2>
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table align-middle" id="cartTable">
-              <thead>
-                <tr><th>Item</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+<main class="py-5">
+<div class="container">
+  <h2 class="fw-bold mb-4"><i class="bi bi-cart3 me-2"></i>Your Cart</h2>
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <!-- Cart table -->
+      <div class="table-responsive">
+        <table class="table align-middle" id="cartTable">
+          <thead>
+            <tr><th>Item</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Raw total -->
+      <div class="text-end mb-3">
+        <h4>Total: ₹<span id="cartTotal">0</span></h4>
+      </div>
+
+      <!-- ── COUPON SECTION ── -->
+      <div class="card border-0 rounded-3 mb-4" style="background:#fffbeb;border:1.5px dashed #fcd34d!important">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+            <i class="bi bi-ticket-perforated-fill text-warning fs-5"></i>
+            <span class="fw-semibold" style="font-size:.9rem">Apply Coupon</span>
           </div>
-          <div class="text-end">
-            <h4>Total: ₹<span id="cartTotal">0</span></h4>
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <input type="text" id="couponInput" class="form-control form-control-sm text-uppercase fw-semibold"
+              placeholder="Enter code e.g. WELCOME50" style="max-width:220px;letter-spacing:1px">
+            <button class="btn btn-sm btn-warning fw-bold" id="applyCouponBtn">Apply</button>
+            <button class="btn btn-sm btn-outline-secondary" id="removeCouponBtn" style="display:none">
+              <i class="bi bi-x-circle me-1"></i>Remove
+            </button>
           </div>
-          <div class="d-flex flex-wrap gap-2 justify-content-end mt-3">
-            <button class="btn btn-outline-success" id="updateCartBtn">Update Cart</button>
-            <button class="btn btn-success" id="placeOrderBtn">Place Order</button>
+          <div id="couponMsg" class="mt-2 small fw-semibold" style="display:none"></div>
+
+          <!-- Discount breakdown (shown after coupon applied) -->
+          <div id="couponBreakdown" class="mt-3 pt-2 border-top" style="display:none">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Subtotal</span><span>₹<span id="couponSubtotal">0</span></span>
+            </div>
+            <div class="d-flex justify-content-between small text-success fw-semibold mb-1">
+              <span>Discount (<span id="couponLabel">—</span>)</span>
+              <span>− ₹<span id="couponDiscount">0</span></span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold" style="font-size:1rem">
+              <span>You Pay</span>
+              <span class="text-success">₹<span id="couponPayable">0</span></span>
+            </div>
           </div>
-          <div class="alert mt-3 d-none" id="cartAlert"></div>
+
+          <!-- Valid codes hint -->
+          <div class="mt-2" style="font-size:.72rem;color:#9ca3af">
+            Valid codes: WELCOME50 · COMBO20 · HAPPY20 · FRESH10 · SNACK2X · DRINK10
+          </div>
         </div>
       </div>
-    </div>
-  </main>
 
-  <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0">
-        <div class="modal-body text-center p-5">
-          <div class="spinner-border text-success mb-3" role="status"></div>
-          <h5 class="mb-0">Placing your order...</h5>
-        </div>
+      <!-- Buttons -->
+      <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <button class="btn btn-outline-success" id="updateCartBtn">Update Cart</button>
+        <button class="btn btn-success" id="placeOrderBtn">Place Order</button>
+      </div>
+      <div class="alert mt-3 d-none" id="cartAlert"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0">
+      <div class="modal-body text-center p-5">
+        <div class="spinner-border text-success mb-3" role="status"></div>
+        <h5 class="mb-0">Placing your order...</h5>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/script.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
